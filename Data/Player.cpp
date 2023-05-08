@@ -5,3 +5,8 @@ Player::Player(const String &firstName, const String &lastName, const String &em
 {
     m_money = money;
 }
+
+void Player::AddHero(const Superhero &hero)
+{
+    m_heroes.Add(hero);
+}

@@ -11,4 +11,19 @@ Superhero::Superhero(const String &firstName, const String &lastName, const Stri
     m_element = element;
     m_power = power;
     m_cost = cost;
+    m_isDead = false;
+    m_mode = SuperheroMode::Defence;
+}
+Superhero::Superhero()
+        : m_firstName(), m_lastName(), m_nickname()
+{
+    m_element = SuperheroElements::Fire;
+    m_power = 0;
+    m_cost = 0;
+    m_isDead = true;
+    m_mode = SuperheroMode::Defence;
+}
+void Superhero::FightWith(const Superhero &hero)
+{
+
 }

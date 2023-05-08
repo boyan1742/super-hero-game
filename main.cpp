@@ -1,7 +1,12 @@
 #include <iostream>
 
+#include "Utils/String.h"
+
 int main()
 {
-    std::cout << "Hello, World!" << std::endl;
+    String s = "ABC xyz  o pi uuujj";
+
+    auto val = s.Split(' ');
+
     return 0;
 }

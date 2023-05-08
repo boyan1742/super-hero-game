@@ -2,7 +2,7 @@
 #define ZAD1_STRING_H
 
 #include <fstream>
-
+#include "Array.h"
 
 class String
 {
@@ -54,10 +54,21 @@ public:
     void Append(int8_t number);
     void Append(double number);
 
+    bool Contains(char ch);
+    size_t AmountOf(char ch);
+    Array<String> Split(char ch);
+
+    bool operator==(const String& rhs);
+    bool operator!=(const String& rhs);
+
     friend std::ostream& operator<<(std::ostream& os, const String& str);
     friend std::istream& operator>>(std::istream& is, String& str);
 
     bool IsEmpty() const;
+    void Clear();
+    const char* c_str() const;
+
+    static void GetLine(std::istream& istream, String *pString);
 };
 
 std::ostream& operator<<(std::ostream& os, const String& str);

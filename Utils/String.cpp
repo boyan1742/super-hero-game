@@ -249,4 +249,98 @@ bool String::IsEmpty() const
 {
     return IsSSO() ? m_data.m_stackBuffer[0] == '\0' : m_data.m_heapBuffer.m_data[0] == '\0';
 }
+bool String::operator==(const String &rhs)
+{
+    return strcmp(
+            IsSSO() ? m_data.m_stackBuffer : m_data.m_heapBuffer.m_data,
+            rhs.IsSSO() ? rhs.m_data.m_stackBuffer : rhs.m_data.m_heapBuffer.m_data
+            ) == 0;
+}
+bool String::operator!=(const String &rhs)
+{
+    return !(*this == rhs);
+}
+Array<String> String::Split(char ch)
+{
+    if(!Contains(ch))
+        return Array<String>(0);
+
+    Array<String> arr(AmountOf(ch), true);
+    String temp;
+
+    size_t size = GetSize();
+    char* buffer = IsSSO() ? m_data.m_stackBuffer : m_data.m_heapBuffer.m_data;
+
+    for (int i = 0; i < size; ++i)
+    {
+        if(buffer[i] == ch)
+        {
+            if(temp.IsEmpty())
+                continue;
+
+            arr.Add(temp);
+            temp.Clear();
+        }
+        else
+        {
+            temp.Append(buffer[i]);
+        }
+    }
+
+    if(!temp.IsEmpty())
+        arr.Add(temp);
+
+    return arr;
+}
+bool String::Contains(char ch)
+{
+    size_t size = GetSize();
+    char* buffer = IsSSO() ? m_data.m_stackBuffer : m_data.m_heapBuffer.m_data;
+
+    for (int i = 0; i < size; ++i)
+    {
+        if(buffer[i] == ch)
+            return true;
+    }
+
+    return false;
+}
+size_t String::AmountOf(char ch)
+{
+    if(!Contains(ch))
+        return 0;
+
+    size_t amount = 0;
+    size_t size = GetSize();
+    char* buffer = IsSSO() ? m_data.m_stackBuffer : m_data.m_heapBuffer.m_data;
+
+    for (int i = 0; i < size; ++i)
+    {
+        if(buffer[i] == ch)
+            amount++;
+    }
+
+    return amount;
+}
+void String::Clear()
+{
+    size_t size = GetSize();
+    char* buffer = IsSSO() ? m_data.m_stackBuffer : m_data.m_heapBuffer.m_data;
+    for (int i = 0; i < size; ++i)
+    {
+        buffer[i] = '\0';
+    }
+}
+const char *String::c_str() const
+{
+    return IsSSO() ? m_data.m_stackBuffer : m_data.m_heapBuffer.m_data;
+}
+
+
+void String::GetLine(std::istream& istream, String *pString)
+{
+    char buffer[1024];
+    istream.getline(buffer, 1024, '\n');
+    *pString = String(buffer);
+}
 

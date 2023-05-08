@@ -1,7 +1,7 @@
 #ifndef SUPERHEROES_PERSON_H
 #define SUPERHEROES_PERSON_H
 
-#include "Utils/String.h"
+#include "../Utils/String.h"
 
 class Person
 {

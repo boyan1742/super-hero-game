@@ -1,3 +1,9 @@
+#ignore files
+.idea/*
+.vs/
+cmake-build-debug/*
+cmake-build-debug-visual-studio/*
+
 # Prerequisites
 *.d
 
