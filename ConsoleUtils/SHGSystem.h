@@ -3,16 +3,21 @@
 
 
 #include "../Utils/String.h"
+#include "../Data/Person.h"
 
 class SHGSystem
 {
     static SHGSystem m_instance;
 
     SHGSystem() = default;
+
+    Person* m_loggedUser = nullptr;
+
+    void PrintHelpMessagePlayer();
+    void PrintHelpMessageAdmin();
+    void PrintHelpMessage();
 public:
     static const SHGSystem& GetInstance();
-
-    bool ParseCommand(const String& cmd);
 
     void Run();
 };
