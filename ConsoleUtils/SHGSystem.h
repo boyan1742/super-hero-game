@@ -3,7 +3,7 @@
 
 
 #include "../Utils/String.h"
-#include "../Data/Person.h"
+#include "../Data/User.h"
 
 class SHGSystem
 {
@@ -11,13 +11,24 @@ class SHGSystem
 
     SHGSystem() = default;
 
-    Person* m_loggedUser = nullptr;
+    User *m_loggedUser = nullptr;
 
-    void PrintHelpMessagePlayer();
-    void PrintHelpMessageAdmin();
-    void PrintHelpMessage();
+    void Setup();
+    void SetupHeroes() const;
+    void CheckIfAdminAccountExists() const;
+
+    void PrintHelpMessagePlayer() const;
+    void PrintHelpMessageAdmin() const;
+    void PrintHelpMessage() const;
+
+    void Login();
+    void Logout(bool bypass = false);
+    bool CreateAdmin() const;
+    void CraetePlayer() const;
+
+    bool AddAccountToFile(UserType type, const String &usernameHash) const;
 public:
-    static const SHGSystem& GetInstance();
+    static SHGSystem &GetInstance();
 
     void Run();
 };

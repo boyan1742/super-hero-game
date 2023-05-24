@@ -15,12 +15,18 @@ class Superhero
     unsigned m_power;
     double m_cost;
     bool m_isDead;
+
+    size_t m_uniqueID;
 public:
     Superhero();
-    Superhero(const String &firstName, const String &lastName, const String &nickname, SuperheroElements element,
+    Superhero(size_t uniqueID, const String &firstName, const String &lastName, const String &nickname, SuperheroElements element,
               unsigned power, double cost);
 
     void FightWith(const Superhero& hero);
+    void SetMode(SuperheroMode mode);
+    void SetDead(bool dead);
+
+    size_t GetUniqueID() const;
 };
 
 

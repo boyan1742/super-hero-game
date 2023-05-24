@@ -132,7 +132,7 @@ char &String::operator[](size_t idx)
 }
 void String::Append(const String &str)
 {
-    if(str.IsEmpty())
+    if (str.IsEmpty())
         return;
 
     size_t len = str.GetSize();
@@ -148,8 +148,11 @@ void String::Append(const String &str)
              m_capacity,
              !str.IsSSO() ?
              str.m_data.m_heapBuffer.m_data : str.m_data.m_stackBuffer);
-    char* b = !IsSSO() ? m_data.m_heapBuffer.m_data : m_data.m_stackBuffer;
+    char *b = !IsSSO() ? m_data.m_heapBuffer.m_data : m_data.m_stackBuffer;
     b[s] = '\0';
+
+    if (!IsSSO())
+        m_data.m_heapBuffer.m_size = s;
 
 }
 void String::Append(char ch)
@@ -241,9 +244,15 @@ std::istream &operator>>(std::istream &is, String &str)
     str = buff;
     return is;
 }
+String operator+(const String &lhs, const String &rhs)
+{
+    String copy = lhs;
+    copy += rhs;
+    return copy;
+}
 bool String::IsSSO() const
 {
-    return m_capacity <= sizeof(m_data.m_heapBuffer) - 1;
+    return m_capacity < sizeof(m_data.m_heapBuffer);
 }
 bool String::IsEmpty() const
 {
@@ -254,69 +263,73 @@ bool String::operator==(const String &rhs)
     return strcmp(
             IsSSO() ? m_data.m_stackBuffer : m_data.m_heapBuffer.m_data,
             rhs.IsSSO() ? rhs.m_data.m_stackBuffer : rhs.m_data.m_heapBuffer.m_data
-            ) == 0;
+    ) == 0;
 }
 bool String::operator!=(const String &rhs)
 {
     return !(*this == rhs);
 }
-Array<String> String::Split(char ch)
+Array<String> String::Split(char ch) const
 {
-    if(!Contains(ch))
-        return Array<String>(0);
+    if (!Contains(ch))
+    {
+        Array<String> arr = Array<String>(1);
+        arr.Add(*this);
+        return arr;
+    }
 
-    Array<String> arr(AmountOf(ch), true);
+    const char *buffer = IsSSO() ? m_data.m_stackBuffer : m_data.m_heapBuffer.m_data;
+
+    Array<String> arr(AmountOf(ch) - (buffer[0] == ch ? 1 : 0), true);
     String temp;
 
     size_t size = GetSize();
-    char* buffer = IsSSO() ? m_data.m_stackBuffer : m_data.m_heapBuffer.m_data;
 
     for (int i = 0; i < size; ++i)
     {
-        if(buffer[i] == ch)
+        if (buffer[i] == ch)
         {
-            if(temp.IsEmpty())
+            if (temp.IsEmpty())
                 continue;
 
             arr.Add(temp);
             temp.Clear();
-        }
-        else
+        } else
         {
             temp.Append(buffer[i]);
         }
     }
 
-    if(!temp.IsEmpty())
+    if (!temp.IsEmpty())
         arr.Add(temp);
 
     return arr;
 }
-bool String::Contains(char ch)
+bool String::Contains(char ch) const
 {
     size_t size = GetSize();
-    char* buffer = IsSSO() ? m_data.m_stackBuffer : m_data.m_heapBuffer.m_data;
+    const char *buffer = IsSSO() ? m_data.m_stackBuffer : m_data.m_heapBuffer.m_data;
 
     for (int i = 0; i < size; ++i)
     {
-        if(buffer[i] == ch)
+        if (buffer[i] == ch)
             return true;
     }
 
     return false;
 }
-size_t String::AmountOf(char ch)
+size_t String::AmountOf(char ch) const
 {
-    if(!Contains(ch))
+    if (!Contains(ch))
         return 0;
 
     size_t amount = 0;
     size_t size = GetSize();
-    char* buffer = IsSSO() ? m_data.m_stackBuffer : m_data.m_heapBuffer.m_data;
+    const char *buffer = IsSSO() ? m_data.m_stackBuffer : m_data.m_heapBuffer.m_data;
 
     for (int i = 0; i < size; ++i)
     {
-        if(buffer[i] == ch)
+        if (buffer[i] == ch)
             amount++;
     }
 
@@ -325,7 +338,7 @@ size_t String::AmountOf(char ch)
 void String::Clear()
 {
     size_t size = GetSize();
-    char* buffer = IsSSO() ? m_data.m_stackBuffer : m_data.m_heapBuffer.m_data;
+    char *buffer = IsSSO() ? m_data.m_stackBuffer : m_data.m_heapBuffer.m_data;
     for (int i = 0; i < size; ++i)
     {
         buffer[i] = '\0';
@@ -337,10 +350,199 @@ const char *String::c_str() const
 }
 
 
-void String::GetLine(std::istream& istream, String *pString)
+void String::GetLine(std::istream &istream, String *pString)
 {
+    if (!pString)
+        return;
+
     char buffer[1024];
     istream.getline(buffer, 1024, '\n');
-    *pString = String(buffer);
+    pString->SetData(buffer);
+}
+
+void String::SetData(const char *str)
+{
+    if (!IsSSO())
+    {
+        delete[] m_data.m_heapBuffer.m_data;
+        m_data.m_heapBuffer.m_size = 0;
+    }
+
+    size_t len = strlen(str);
+    if (len > sizeof(m_data.m_heapBuffer))
+    {
+        m_capacity = len + 1 + CAPACITY_PADDING;
+        m_data.m_heapBuffer.m_data = new char[len + 1 + CAPACITY_PADDING];
+        strcpy_s(m_data.m_heapBuffer.m_data, m_capacity, str);
+        m_data.m_heapBuffer.m_size = len;
+    } else
+    {
+        strcpy_s(m_data.m_stackBuffer, str);
+        m_capacity = strlen(str);
+    }
+}
+void String::ToLower()
+{
+    char *buffer = IsSSO() ? m_data.m_stackBuffer : m_data.m_heapBuffer.m_data;
+
+    for (int i = 0; i < GetSize(); ++i)
+    {
+        if (buffer[i] >= 'A' && buffer[i] <= 'Z')
+            buffer[i] ^= 0x20; // flip the 5th bit to switch between cases.
+    }
+}
+void String::ToUpper()
+{
+    char *buffer = IsSSO() ? m_data.m_stackBuffer : m_data.m_heapBuffer.m_data;
+
+    for (int i = 0; i < GetSize(); ++i)
+    {
+        if (buffer[i] >= 'a' && buffer[i] <= 'z')
+            buffer[i] ^= 0x20; // flip the 5th bit to switch between cases.
+    }
+}
+String &String::operator+=(const String &rhs)
+{
+    Append(rhs);
+    return *this;
+}
+void String::ReadExact(std::ifstream &ifstream, size_t amount, String *pString)
+{
+    char *buffer = new char[amount];
+    ifstream.read(buffer, amount);
+    pString->SetData(buffer);
+}
+String &String::operator+=(uint64_t rhs)
+{
+    Append(rhs);
+    return *this;
+}
+
+String &String::operator+=(int64_t rhs)
+{
+    Append(rhs);
+    return *this;
+}
+
+String &String::operator+=(uint32_t rhs)
+{
+    Append(rhs);
+    return *this;
+}
+
+String &String::operator+=(int32_t rhs)
+{
+    Append(rhs);
+    return *this;
+}
+
+String &String::operator+=(uint16_t rhs)
+{
+    Append(rhs);
+    return *this;
+}
+
+String &String::operator+=(int16_t rhs)
+{
+    Append(rhs);
+    return *this;
+}
+
+String &String::operator+=(uint8_t rhs)
+{
+    Append(rhs);
+    return *this;
+}
+
+String &String::operator+=(int8_t rhs)
+{
+    Append(rhs);
+    return *this;
+}
+
+String operator+(const String &lhs, uint64_t rhs)
+{
+    String copy = lhs;
+    copy += rhs;
+    return copy;
+}
+String operator+(const String &lhs, int64_t rhs)
+{
+    String copy = lhs;
+    copy += rhs;
+    return copy;
+}
+String operator+(const String &lhs, uint32_t rhs)
+{
+    String copy = lhs;
+    copy += rhs;
+    return copy;
+}
+String operator+(const String &lhs, int32_t rhs)
+{
+    String copy = lhs;
+    copy += rhs;
+    return copy;
+}
+String operator+(const String &lhs, uint16_t rhs)
+{
+    String copy = lhs;
+    copy += rhs;
+    return copy;
+}
+String operator+(const String &lhs, int16_t rhs)
+{
+    String copy = lhs;
+    copy += rhs;
+    return copy;
+}
+String operator+(const String &lhs, uint8_t rhs)
+{
+    String copy = lhs;
+    copy += rhs;
+    return copy;
+}
+String operator+(const String &lhs, int8_t rhs)
+{
+    String copy = lhs;
+    copy += rhs;
+    return copy;
+}
+String operator+(const String &lhs, double rhs)
+{
+    String copy = lhs;
+    copy += rhs;
+    return copy;
+}
+void String::Append(String &&str)
+{
+    if (str.IsEmpty())
+        return;
+
+    size_t len = str.GetSize();
+    if (len + GetSize() >= m_capacity)
+    {
+        //resize
+        Resize(len + GetSize());
+    }
+
+    size_t s = len + GetSize();
+    strcat_s(!IsSSO() ?
+             m_data.m_heapBuffer.m_data : m_data.m_stackBuffer,
+             m_capacity,
+             !str.IsSSO() ?
+             str.m_data.m_heapBuffer.m_data : str.m_data.m_stackBuffer);
+    char *b = !IsSSO() ? m_data.m_heapBuffer.m_data : m_data.m_stackBuffer;
+    b[s] = '\0';
+
+    if (!IsSSO())
+        m_data.m_heapBuffer.m_size = s;
+
+    str.Free();
+}
+String &String::operator+=(double rhs)
+{
+    Append(rhs);
+    return *this;
 }
 

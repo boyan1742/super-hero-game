@@ -1,12 +1,8 @@
-#include <iostream>
-
-#include "Utils/String.h"
+#include "ConsoleUtils/SHGSystem.h"
 
 int main()
 {
-    String s = "ABC xyz  o pi uuujj";
-
-    auto val = s.Split(' ');
+    SHGSystem::GetInstance().Run();
 
     return 0;
 }

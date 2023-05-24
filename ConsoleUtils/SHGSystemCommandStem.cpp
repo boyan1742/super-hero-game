@@ -9,27 +9,27 @@ public:
 };
 
 static Array<__CmdStems> m_stems(
-        {
-                __CmdStems{SHGSystemCommandType::Help, "Help"},
-                __CmdStems{SHGSystemCommandType::Login, "Login"},
-                __CmdStems{SHGSystemCommandType::Logout, "Logout"},
-                __CmdStems{SHGSystemCommandType::AddPlayer, "AddPlayer"},
-                __CmdStems{SHGSystemCommandType::DeletePlayer, "DeletePlayer"},
-                __CmdStems{SHGSystemCommandType::Market, "Market"},
-                __CmdStems{SHGSystemCommandType::Players, "Players"},
-                __CmdStems{SHGSystemCommandType::Buy, "Buy"},
-                __CmdStems{SHGSystemCommandType::Stance, "Stance"},
-                __CmdStems{SHGSystemCommandType::Attack, "Attack"},
-                __CmdStems{SHGSystemCommandType::Baltop, "Baltop"},
-                __CmdStems{SHGSystemCommandType::Upgrade, "Upgrade"},
-                __CmdStems{SHGSystemCommandType::Quit, "Quit"},
-        }, true);
+        new __CmdStems[]{
+                __CmdStems{SHGSystemCommandType::Help, "help"},
+                __CmdStems{SHGSystemCommandType::Login, "login"},
+                __CmdStems{SHGSystemCommandType::Logout, "logout"},
+                __CmdStems{SHGSystemCommandType::AddPlayer, "addplayer"},
+                __CmdStems{SHGSystemCommandType::DeletePlayer, "deleteplayer"},
+                __CmdStems{SHGSystemCommandType::Market, "market"},
+                __CmdStems{SHGSystemCommandType::Players, "players"},
+                __CmdStems{SHGSystemCommandType::Buy, "buy"},
+                __CmdStems{SHGSystemCommandType::Stance, "stance"},
+                __CmdStems{SHGSystemCommandType::Attack, "attack"},
+                __CmdStems{SHGSystemCommandType::Baltop, "baltop"},
+                __CmdStems{SHGSystemCommandType::Upgrade, "upgrade"},
+                __CmdStems{SHGSystemCommandType::Quit, "quit"},
+        }, 12, true);
 
 bool SHGSystemCommandStem::IsStemValid(const String &stem)
 {
     for (int i = 0; i < m_stems.GetLength(); ++i)
     {
-        if(m_stems[i]._cmd == stem)
+        if (m_stems[i]._cmd == stem)
             return true;
     }
 
@@ -37,14 +37,17 @@ bool SHGSystemCommandStem::IsStemValid(const String &stem)
 }
 SHGSystemCommandType SHGSystemCommandStem::GetCommandType(const String &stem)
 {
-    if(!IsStemValid(stem))
+    String cpy = stem;
+    cpy.ToLower();
+
+    if (!IsStemValid(cpy))
         throw InvalidCommandException();
 
     for (int i = 0; i < m_stems.GetLength(); ++i)
     {
-        if(m_stems[i]._cmd == stem)
+        if (m_stems[i]._cmd == cpy)
             return m_stems[i]._key;
     }
 
-    return SHGSystemCommandType::Quit; // something went wrong, shouldn't ever come here!!!
+    throw std::runtime_error("Something went wrong! This shouldn't be ever seen!");
 }

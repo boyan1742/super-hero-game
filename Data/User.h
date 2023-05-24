@@ -1,9 +1,15 @@
-#ifndef SUPERHEROES_PERSON_H
-#define SUPERHEROES_PERSON_H
+#ifndef SUPERHEROES_USER_H
+#define SUPERHEROES_USER_H
 
 #include "../Utils/String.h"
 
-class Person
+enum class UserType
+{
+    Player,
+    Admin
+};
+
+class User
 {
     String m_firstName = "";
     String m_lastName = "";
@@ -11,14 +17,17 @@ class Person
     String m_username = "";
     String m_password = "";
 
-    Person() = default;
+    User() = default;
 public:
-    Person(const String &firstName, const String &lastName, const String &email, const String &username,
-           const String &password);
+    User(const String &firstName, const String &lastName, const String &email, const String &username,
+         const String &password);
+    virtual ~User() = default;
 
     const String &GetFirstName() const;
     const String &GetLastName() const;
     const String &GetUsername() const;
+
+    virtual UserType GetUserType() = 0;
 
 protected:
     const String &GetEmail() const;
@@ -26,4 +35,4 @@ protected:
 };
 
 
-#endif //SUPERHEROES_PERSON_H
+#endif //SUPERHEROES_USER_H

@@ -1,13 +1,10 @@
-//
-// Created by boyan on 3.5.2023 г..
-//
-
 #include "Superhero.h"
 
-Superhero::Superhero(const String &firstName, const String &lastName, const String &nickname, SuperheroElements element,
+Superhero::Superhero(size_t uniqueID, const String &firstName, const String &lastName, const String &nickname, SuperheroElements element,
                      unsigned int power, double cost)
         : m_firstName(firstName), m_lastName(lastName), m_nickname(nickname)
 {
+    m_uniqueID = uniqueID;
     m_element = element;
     m_power = power;
     m_cost = cost;
@@ -17,6 +14,7 @@ Superhero::Superhero(const String &firstName, const String &lastName, const Stri
 Superhero::Superhero()
         : m_firstName(), m_lastName(), m_nickname()
 {
+    m_uniqueID = 0;
     m_element = SuperheroElements::Fire;
     m_power = 0;
     m_cost = 0;
@@ -26,4 +24,16 @@ Superhero::Superhero()
 void Superhero::FightWith(const Superhero &hero)
 {
 
+}
+void Superhero::SetMode(SuperheroMode mode)
+{
+    m_mode = mode;
+}
+void Superhero::SetDead(bool dead)
+{
+    m_isDead = dead;
+}
+size_t Superhero::GetUniqueID() const
+{
+    return m_uniqueID;
 }
