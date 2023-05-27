@@ -21,3 +21,11 @@ void Player::AddHeroes(const Array<size_t> &heroesIDs)
         m_heroes.Add(heroesIDs[i]);
     }
 }
+double Player::GetMoney() const
+{
+    return m_money;
+}
+const Array<size_t> &Player::GetSuperheroes() const
+{
+    return m_heroes;
+}

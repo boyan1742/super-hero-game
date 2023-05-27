@@ -1,9 +1,10 @@
+#include <iostream>
 #include "SuperheroHolder.h"
 
 SuperheroHolder SuperheroHolder::m_instance;
 
 SuperheroHolder::SuperheroHolder()
-        : m_holder(16)
+        : m_holder(16), m_market(16)
 {
 
 }
@@ -28,4 +29,48 @@ void SuperheroHolder::AddSuperhero(const Superhero &superhero) const
 const SuperheroHolder &SuperheroHolder::GetInstance()
 {
     return m_instance;
+}
+void SuperheroHolder::SaveMarket() const
+{
+    std::ofstream file("market.dat", std::ios::binary);
+    if (!file.is_open())
+    {
+        std::cout << "[ERROR] Cannot save market!\n";
+        return;
+    }
+
+    size_t len = m_market.GetLength();
+    file.write((const char *) &len, sizeof(size_t));
+    for (int i = 0; i < len; ++i)
+    {
+        file.write((const char*) &m_market[i], sizeof(size_t));
+    }
+
+    file.close();
+}
+void SuperheroHolder::LoadMarket() const
+{
+    std::ifstream file("market.dat", std::ios::binary);
+    if (!file.is_open())
+    {
+        std::cout << "[ERROR] Cannot load market!\n";
+        return;
+    }
+
+    size_t len;
+    file.read((char *) &len, sizeof(size_t));
+    for (int i = 0; i < len; ++i)
+    {
+        file.read((char*) &m_market[i], sizeof(size_t));
+    }
+
+    file.close();
+}
+const Array<size_t> &SuperheroHolder::GetMarketHeroes() const
+{
+    return m_market;
+}
+bool SuperheroHolder::HasHeroes() const
+{
+    return !m_holder.IsEmpty();
 }

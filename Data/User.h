@@ -26,12 +26,10 @@ public:
     const String &GetFirstName() const;
     const String &GetLastName() const;
     const String &GetUsername() const;
-
-    virtual UserType GetUserType() = 0;
-
-protected:
     const String &GetEmail() const;
     const String &GetPassword() const;
+
+    virtual UserType GetUserType() = 0;
 };
 
 

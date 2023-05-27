@@ -23,7 +23,7 @@ static Array<__CmdStems> m_stems(
                 __CmdStems{SHGSystemCommandType::Baltop, "baltop"},
                 __CmdStems{SHGSystemCommandType::Upgrade, "upgrade"},
                 __CmdStems{SHGSystemCommandType::Quit, "quit"},
-        }, 12, true);
+        }, 13, true);
 
 bool SHGSystemCommandStem::IsStemValid(const String &stem)
 {

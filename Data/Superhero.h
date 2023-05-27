@@ -27,6 +27,10 @@ public:
     void SetDead(bool dead);
 
     size_t GetUniqueID() const;
+
+    const String& GetNickname() const;
+    double GetCost() const;
+    SuperheroElements GetElement() const;
 };
 
 

@@ -36,10 +36,27 @@ String::String(const String &copy)
 {
     CopyFrom(copy);
 }
+
+String::String(String &&other)
+{
+    MoveFrom(std::move(other));
+}
+
 String::~String()
 {
     Free();
 }
+
+String &String::operator=(String &&other)
+{
+    if (this != &other)
+    {
+        Free();
+        MoveFrom(std::move(other));
+    }
+    return *this;
+}
+
 String &String::operator=(const String &other)
 {
     if (this != &other)
@@ -62,6 +79,18 @@ void String::CopyFrom(const String &other)
         strcpy_s(m_data.m_stackBuffer, other.m_data.m_stackBuffer);
     }
 }
+
+void String::MoveFrom(String &&other)
+{
+    m_data.m_heapBuffer.m_data = other.m_data.m_heapBuffer.m_data;
+    m_data.m_heapBuffer.m_size = other.m_data.m_heapBuffer.m_size;
+
+    m_capacity = other.m_capacity;
+    other.m_capacity = 0;
+    other.m_data.m_heapBuffer.m_data = nullptr;
+    other.m_data.m_heapBuffer.m_size = 0;
+}
+
 void String::Free()
 {
     if (!IsSSO())
@@ -280,7 +309,7 @@ Array<String> String::Split(char ch) const
 
     const char *buffer = IsSSO() ? m_data.m_stackBuffer : m_data.m_heapBuffer.m_data;
 
-    Array<String> arr(AmountOf(ch) - (buffer[0] == ch ? 1 : 0), true);
+    Array<String> arr(AmountOf(ch) + 1 - (buffer[0] == ch ? 1 : 0), true);
     String temp;
 
     size_t size = GetSize();
@@ -292,8 +321,8 @@ Array<String> String::Split(char ch) const
             if (temp.IsEmpty())
                 continue;
 
-            arr.Add(temp);
-            temp.Clear();
+            arr.Add(std::move(temp));
+            temp = String();
         } else
         {
             temp.Append(buffer[i]);
@@ -301,7 +330,10 @@ Array<String> String::Split(char ch) const
     }
 
     if (!temp.IsEmpty())
-        arr.Add(temp);
+    {
+        temp.Append('\0');
+        arr.Add(std::move(temp));
+    }
 
     return arr;
 }
@@ -337,12 +369,11 @@ size_t String::AmountOf(char ch) const
 }
 void String::Clear()
 {
-    size_t size = GetSize();
-    char *buffer = IsSSO() ? m_data.m_stackBuffer : m_data.m_heapBuffer.m_data;
-    for (int i = 0; i < size; ++i)
-    {
-        buffer[i] = '\0';
-    }
+    if (!IsSSO())
+        delete[] m_data.m_heapBuffer.m_data;
+
+    ClearStaticArray();
+    m_capacity = CAPACITY_PADDING;
 }
 const char *String::c_str() const
 {
@@ -545,4 +576,7 @@ String &String::operator+=(double rhs)
     Append(rhs);
     return *this;
 }
+
+
+
 

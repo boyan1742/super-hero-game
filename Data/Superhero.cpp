@@ -37,3 +37,15 @@ size_t Superhero::GetUniqueID() const
 {
     return m_uniqueID;
 }
+const String &Superhero::GetNickname() const
+{
+    return m_nickname;
+}
+double Superhero::GetCost() const
+{
+    return m_cost;
+}
+SuperheroElements Superhero::GetElement() const
+{
+    return m_element;
+}
