@@ -64,8 +64,8 @@ public:
     size_t AmountOf(char ch) const;
     Array<String> Split(char ch) const;
 
-    bool operator==(const String &rhs);
-    bool operator!=(const String &rhs);
+    bool operator==(const String &rhs) const;
+    bool operator!=(const String &rhs) const;
 
     friend std::ostream &operator<<(std::ostream &os, const String &str);
     friend std::istream &operator>>(std::istream &is, String &str);

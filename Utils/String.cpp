@@ -287,14 +287,14 @@ bool String::IsEmpty() const
 {
     return IsSSO() ? m_data.m_stackBuffer[0] == '\0' : m_data.m_heapBuffer.m_data[0] == '\0';
 }
-bool String::operator==(const String &rhs)
+bool String::operator==(const String &rhs) const
 {
     return strcmp(
             IsSSO() ? m_data.m_stackBuffer : m_data.m_heapBuffer.m_data,
             rhs.IsSSO() ? rhs.m_data.m_stackBuffer : rhs.m_data.m_heapBuffer.m_data
     ) == 0;
 }
-bool String::operator!=(const String &rhs)
+bool String::operator!=(const String &rhs) const
 {
     return !(*this == rhs);
 }

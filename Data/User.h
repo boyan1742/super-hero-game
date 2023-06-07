@@ -29,7 +29,7 @@ public:
     const String &GetEmail() const;
     const String &GetPassword() const;
 
-    virtual UserType GetUserType() = 0;
+    virtual UserType GetUserType() const = 0;
 };
 
 

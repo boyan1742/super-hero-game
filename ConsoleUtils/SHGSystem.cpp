@@ -170,7 +170,7 @@ void SHGSystem::Login()
         return;
     }
 
-    Optional<User *> user = ParseUser(file);
+    Optional<UniquePtr<User>> user = ParseUser(file);
     if (!user.HasValue())
         throw std::runtime_error("Invalid user file format!");
 
@@ -186,7 +186,7 @@ void SHGSystem::Login()
         return;
     }
 
-    m_loggedUser = user.GetData();
+    m_loggedUser = user.LendData().Release();
 
     if (!m_loggedUser) throw std::runtime_error("Something went wrong while logging in!");
 
@@ -197,8 +197,6 @@ void SHGSystem::Login()
 
 void SHGSystem::Logout(bool bypass)
 {
-    static const Array<String> answers(new String[]{"yes", "no", "y", "n"}, 4, true);
-
     if (!m_loggedUser)
     {
         Logger::LogError("You must be logged in to issue this command!");
@@ -213,7 +211,7 @@ void SHGSystem::Logout(bool bypass)
         response.ToLower();
     }
 
-    if ((answers.Contains(response) && (response == "yes" || response == "y")) || bypass)
+    if ((response == "yes" || response == "y") || bypass)
     {
         std::cout << "Logged out user: \"" << m_loggedUser->GetUsername() << "\"!\n";
         delete m_loggedUser;
@@ -267,8 +265,7 @@ void SHGSystem::CheckIfAdminAccountExists() const
         {
             adminExists = true;
             break;
-        } else if (split[0] == "p")
-        {}
+        } else if (split[0] == "p") {}
         else
             throw std::runtime_error((String("Invalid username at line: ") + counter).c_str());
 
@@ -597,10 +594,14 @@ void SHGSystem::AddPlayer()
 {
     while (!CreatePlayer())
     {
-        static const Array<String> answers(new String[]{"yes", "no", "y", "n"}, 4, true);
-
         static String response = "";
-        if ((answers.Contains(response) && (response == "no" || response == "n")))
+
+        std::cout << "\nTry again?  ";
+
+        std::cin >> response;
+        response.ToLower();
+
+        if (response != "yes" || response != "y")
         {
             Logger::LogMessage("Aborting creating new player!");
             break;
@@ -625,7 +626,7 @@ void SHGSystem::Market()
     std::cout << "Market: \n";
     for (int i = 0; i < heroes.GetLength(); ++i)
     {
-        Superhero hero = SuperheroHolder::GetInstance().GetSuperhero(heroes[i]);
+        const Superhero& hero = SuperheroHolder::GetInstance().GetSuperhero(heroes[i]);
         std::cout << "\t" << hero.GetNickname() << " → $" << hero.GetCost() <<
                   "\t\tElement: " <<
                   (hero.GetElement() == SuperheroElements::Earth ?
@@ -659,9 +660,9 @@ void SHGSystem::ShowPlayers()
 
         std::ifstream userFile(("./users/" + split[1] + ".dat").c_str(), std::ios::binary);
 
-        Optional<User *> user = ParseUser(userFile);
+        Optional<UniquePtr<User>> user = ParseUser(userFile);
         if (user.HasValue())
-            users.Add(user.GetData());
+            users.Add(user.LendData().Release());
 
         userFile.close();
     }
@@ -719,6 +720,9 @@ void SHGSystem::ShowPlayers()
             Logger::LogError("Unknown user type!");
             break;
     }
+
+    for (int i = 0; i < users.GetLength(); ++i)
+        delete users[i];
 }
 void SHGSystem::BuyHero()
 {
@@ -761,9 +765,9 @@ void SHGSystem::Baltop()
 
         std::ifstream userFile(("./users/" + split[1] + ".dat").c_str(), std::ios::binary);
 
-        Optional<User *> user = ParseUser(userFile);
+        Optional<UniquePtr<User>> user = ParseUser(userFile);
         if (user.HasValue() && user.GetData()->GetUserType() == UserType::Player)
-            users.Add(user.GetData());
+            users.Add(user.LendData().Release());
 
         userFile.close();
     }
@@ -797,8 +801,12 @@ void SHGSystem::Baltop()
                   ((Player *) users[i])->GetMoney() << "\n";
     }
     std::cout << "\n\n";
+
+    for (int i = 0; i < users.GetLength(); ++i) // clean up users
+        delete users[i];
 }
-Optional<User *> SHGSystem::ParseUser(std::ifstream &file)
+
+Optional<UniquePtr<User>> SHGSystem::ParseUser(std::ifstream &file)
 {
     UserType type;
     file.read((char *) &type, sizeof(UserType));
@@ -831,7 +839,7 @@ Optional<User *> SHGSystem::ParseUser(std::ifstream &file)
         file.read((char *) &eSize, sizeof(size_t));
         String::ReadExact(file, eSize, &email);
 
-        return Optional<User *>(new Admin(firstName, lastName, email, username, hashedPassword));
+        return Optional<UniquePtr<User>>(new Admin(firstName, lastName, email, username, hashedPassword));
     } else if (type == UserType::Player)
     {
         //layout:
@@ -861,11 +869,11 @@ Optional<User *> SHGSystem::ParseUser(std::ifstream &file)
             heroes.Add(id);
         }
 
-        Player *pl = new Player(firstName, lastName, email, username, hashedPassword, money);
-        pl->AddHeroes(heroes);
-        return Optional<User *>(new Player(*pl));
+        Player pl = Player(firstName, lastName, email, username, hashedPassword, money);
+        pl.AddHeroes(heroes);
+        return Optional<UniquePtr<User>>(new Player(pl));
     }
 
-    return Optional<User *>();
+    return Optional<UniquePtr<User>>();
 }
 

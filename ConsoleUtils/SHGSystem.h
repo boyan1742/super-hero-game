@@ -4,6 +4,7 @@
 
 #include "../Utils/String.h"
 #include "../Utils/Optional.hpp"
+#include "../Utils/UniquePtr.hpp"
 #include "../Data/User.h"
 
 class SHGSystem
@@ -42,7 +43,7 @@ class SHGSystem
 
     bool AddAccountToFile(UserType type, const String &usernameHash) const;
 
-    Optional<User*> ParseUser(std::ifstream& file);
+    Optional<UniquePtr<User>> ParseUser(std::ifstream &file);
 public:
     static SHGSystem &GetInstance();
 

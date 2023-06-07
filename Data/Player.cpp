@@ -10,7 +10,7 @@ void Player::AddHero(size_t heroID)
 {
     m_heroes.Add(heroID);
 }
-UserType Player::GetUserType()
+UserType Player::GetUserType() const
 {
     return UserType::Player;
 }

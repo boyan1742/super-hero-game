@@ -8,7 +8,7 @@ SuperheroHolder::SuperheroHolder()
 {
 
 }
-const Superhero &SuperheroHolder::GetSuperhero(size_t uniqueID) const
+const Superhero &SuperheroHolder::GetSuperhero(size_t uniqueID)
 {
     for (int i = 0; i < m_holder.GetLength(); ++i)
     {
@@ -18,15 +18,15 @@ const Superhero &SuperheroHolder::GetSuperhero(size_t uniqueID) const
 
     throw std::runtime_error((String("No superhero with id: ") + uniqueID + " wasn't found!").c_str());
 }
-void SuperheroHolder::AddSuperhero(Superhero &&superhero) const
+void SuperheroHolder::AddSuperhero(Superhero &&superhero)
 {
     m_holder.Add(std::move(superhero));
 }
-void SuperheroHolder::AddSuperhero(const Superhero &superhero) const
+void SuperheroHolder::AddSuperhero(const Superhero &superhero)
 {
     m_holder.Add(superhero);
 }
-const SuperheroHolder &SuperheroHolder::GetInstance()
+SuperheroHolder &SuperheroHolder::GetInstance()
 {
     return m_instance;
 }
@@ -43,12 +43,12 @@ void SuperheroHolder::SaveMarket() const
     file.write((const char *) &len, sizeof(size_t));
     for (int i = 0; i < len; ++i)
     {
-        file.write((const char*) &m_market[i], sizeof(size_t));
+        file.write((const char *) &m_market[i], sizeof(size_t));
     }
 
     file.close();
 }
-void SuperheroHolder::LoadMarket() const
+void SuperheroHolder::LoadMarket()
 {
     std::ifstream file("market.dat", std::ios::binary);
     if (!file.is_open())
@@ -61,7 +61,7 @@ void SuperheroHolder::LoadMarket() const
     file.read((char *) &len, sizeof(size_t));
     for (int i = 0; i < len; ++i)
     {
-        file.read((char*) &m_market[i], sizeof(size_t));
+        file.read((char *) &m_market[i], sizeof(size_t));
     }
 
     file.close();

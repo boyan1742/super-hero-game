@@ -5,7 +5,7 @@ Admin::Admin(const String &firstName, const String &lastName, const String &emai
 {
 
 }
-UserType Admin::GetUserType()
+UserType Admin::GetUserType() const
 {
     return UserType::Admin;
 }

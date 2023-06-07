@@ -9,7 +9,7 @@ public:
     Admin(const String &firstName, const String &lastName, const String &email, const String &username,
           const String &password);
 
-    UserType GetUserType() override;
+    UserType GetUserType() const override;
 };
 
 

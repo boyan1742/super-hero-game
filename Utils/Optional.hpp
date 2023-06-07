@@ -25,8 +25,10 @@ public:
     Optional &operator=(Optional &&other) noexcept;
 
     const T &GetData() const;
+    T& LendData();
     bool HasValue() const;
 };
+
 
 ////////////////////////////////////////////////////////////
 
@@ -106,6 +108,13 @@ const T &Optional<T>::GetData() const
 {
     return *m_data;
 }
+
+template<typename T>
+T &Optional<T>::LendData()
+{
+    return *m_data;
+}
+
 template<typename T>
 bool Optional<T>::HasValue() const
 {

@@ -15,7 +15,7 @@ public:
 
     void AddHero(size_t heroID);
     void AddHeroes(const Array<size_t>& heroesIDs);
-    UserType GetUserType() override;
+    UserType GetUserType() const override;
     double GetMoney() const;
     const Array<size_t>& GetSuperheroes() const;
 };
