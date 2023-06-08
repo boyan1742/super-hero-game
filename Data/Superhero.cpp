@@ -49,3 +49,19 @@ SuperheroElements Superhero::GetElement() const
 {
     return m_element;
 }
+const String &Superhero::GetFirstName() const
+{
+    return m_firstName;
+}
+const String &Superhero::GetLastName() const
+{
+    return m_lastName;
+}
+unsigned Superhero::GetPower() const
+{
+    return m_power;
+}
+SuperheroMode Superhero::GetMode() const
+{
+    return m_mode;
+}

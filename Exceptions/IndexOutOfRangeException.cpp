@@ -11,7 +11,7 @@ IndexOutOfRangeException::IndexOutOfRangeException(const char *msg)
     m_msg = new char[strlen(msg) + 1];
     strcpy_s(m_msg, strlen(msg) + 1, msg);
 }
-char *IndexOutOfRangeException::what()
+const char *IndexOutOfRangeException::what() const
 {
     return m_msg;
 }

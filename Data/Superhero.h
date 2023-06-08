@@ -28,8 +28,12 @@ public:
 
     size_t GetUniqueID() const;
 
+    const String& GetFirstName() const;
+    const String& GetLastName() const;
     const String& GetNickname() const;
+    unsigned GetPower() const;
     double GetCost() const;
+    SuperheroMode GetMode() const;
     SuperheroElements GetElement() const;
 };
 

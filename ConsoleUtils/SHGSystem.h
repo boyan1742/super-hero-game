@@ -6,6 +6,7 @@
 #include "../Utils/Optional.hpp"
 #include "../Utils/UniquePtr.hpp"
 #include "../Data/User.h"
+#include "../Data/Superhero.h"
 
 class SHGSystem
 {
@@ -15,9 +16,11 @@ class SHGSystem
 
     User *m_loggedUser = nullptr;
 
+    void PrintWelcomeMessage() const;
+
     void Setup();
-    void SetupHeroes() const;
     void CheckIfAdminAccountExists() const;
+    void AddFirstTimeHeroes() const;
 
     void PrintHelpMessagePlayer() const;
     void PrintHelpMessageAdmin() const;
@@ -27,6 +30,8 @@ class SHGSystem
     void Logout(bool bypass = false);
     bool CreateAdmin() const;
     bool CreatePlayer() const;
+
+    Optional<Superhero> CreateHero() const;
 
     void AddPlayer();
     void DeletePlayer();
@@ -43,8 +48,13 @@ class SHGSystem
 
     bool AddAccountToFile(UserType type, const String &usernameHash) const;
 
+    bool HasUserInUsersFile(const String& hashedUsername) const;
+
     Optional<UniquePtr<User>> ParseUser(std::ifstream &file);
 public:
+    SHGSystem(const SHGSystem&) = delete;
+    SHGSystem& operator=(const SHGSystem&) = delete;
+
     static SHGSystem &GetInstance();
 
     void Run();

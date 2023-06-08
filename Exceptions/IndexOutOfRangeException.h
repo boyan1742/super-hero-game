@@ -10,7 +10,7 @@ public:
     IndexOutOfRangeException();
     explicit IndexOutOfRangeException(const char* msg);
 
-    char* what();
+    const char* what() const override;
 };
 
 

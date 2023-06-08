@@ -4,12 +4,12 @@
 #include <stdexcept>
 #include "../Utils/String.h"
 
-class InvalidCommandException : std::exception
+class InvalidCommandException : public std::exception
 {
-    static char* msg;
 public:
     InvalidCommandException() = default;
-    char* what();
+
+    const char *what() const override;
 };
 
 

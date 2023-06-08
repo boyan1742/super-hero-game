@@ -1,8 +1,7 @@
 #include "InvalidCommandException.h"
 
-char* InvalidCommandException::msg = "Bad command!";
-
-char *InvalidCommandException::what()
+static const char* m_msg = "Bad command!";
+const char *InvalidCommandException::what() const
 {
-    return InvalidCommandException::msg;
+    return m_msg;
 }

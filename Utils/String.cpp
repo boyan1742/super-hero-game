@@ -5,6 +5,8 @@
 String::String(size_t capacity)
         : m_data()
 {
+    ClearStaticArray();
+
     m_capacity = capacity;
     if (!IsSSO())
     {
@@ -393,6 +395,9 @@ void String::GetLine(std::istream &istream, String *pString)
 
 void String::SetData(const char *str)
 {
+    if(!str)
+        return;
+
     if (!IsSSO())
     {
         delete[] m_data.m_heapBuffer.m_data;

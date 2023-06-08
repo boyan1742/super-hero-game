@@ -13,6 +13,7 @@ String Utils::HashString(const String &normal)
 
     return copy;
 }
+
 bool Utils::ValidateUsername(const String &username)
 {
     bool flagA = false;
@@ -35,6 +36,7 @@ bool Utils::ValidateUsername(const String &username)
 
     return flagA || flagN || username.Contains('-') || username.Contains('_');
 }
+
 bool Utils::ValidatePassword(const String &password)
 {
     bool flagA = false;
@@ -60,6 +62,7 @@ bool Utils::ValidatePassword(const String &password)
             password.Contains('#') || password.Contains('$') ||
             password.Contains(' ') || password.Contains('-'));
 }
+
 bool Utils::ValidateEmail(const String &email)
 {
     bool flagA = false;
@@ -84,6 +87,7 @@ bool Utils::ValidateEmail(const String &email)
            (flagA && email.Contains('@') && email.Contains('.') && email.Contains('-')) ||
            (flagA && email.Contains('@') && email.Contains('.') && email.Contains('-') && flagN);
 }
+
 bool Utils::ValidateName(const String &name)
 {
     bool flagA;
@@ -95,6 +99,49 @@ bool Utils::ValidateName(const String &name)
 
         flagA = name.Contains(i ^ 0x20);
         if (flagA) return true;
+    }
+
+    return false;
+}
+
+bool Utils::ParseSuperHeroMode(const String &str, SuperheroMode *mode)
+{
+    if (!mode)
+        return false;
+
+    if (str == "attack")
+    {
+        *mode = SuperheroMode::Attack;
+        return true;
+    }
+    if (str == "defence")
+    {
+        *mode = SuperheroMode::Defence;
+        return true;
+    }
+
+    return false;
+}
+
+bool Utils::ParseSuperHeroElement(const String &str, SuperheroElements *element)
+{
+    if (!element)
+        return false;
+
+    if (str == "fire")
+    {
+        *element = SuperheroElements::Fire;
+        return true;
+    }
+    if (str == "water")
+    {
+        *element = SuperheroElements::Water;
+        return true;
+    }
+    if (str == "earth")
+    {
+        *element = SuperheroElements::Earth;
+        return true;
     }
 
     return false;

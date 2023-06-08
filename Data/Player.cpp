@@ -6,26 +6,46 @@ Player::Player(const String &firstName, const String &lastName, const String &em
     m_money = money;
 }
 
-void Player::AddHero(size_t heroID)
+void Player::AddHero(size_t heroID, SuperheroMode mode)
 {
-    m_heroes.Add(heroID);
+    m_heroes.Add(Pair(heroID, mode));
 }
+
 UserType Player::GetUserType() const
 {
     return UserType::Player;
 }
+
 void Player::AddHeroes(const Array<size_t> &heroesIDs)
+{
+    for (int i = 0; i < heroesIDs.GetLength(); ++i)
+    {
+        m_heroes.Add(Pair(heroesIDs[i], SuperheroMode::Attack));
+    }
+}
+
+void Player::AddHeroes(const Array<Pair<size_t, SuperheroMode>> &heroesIDs)
 {
     for (int i = 0; i < heroesIDs.GetLength(); ++i)
     {
         m_heroes.Add(heroesIDs[i]);
     }
 }
+
 double Player::GetMoney() const
 {
     return m_money;
 }
-const Array<size_t> &Player::GetSuperheroes() const
+
+const Array<Pair<size_t, SuperheroMode>> &Player::GetSuperheroes() const
 {
     return m_heroes;
+}
+void Player::ChangeHeroStance(size_t heroID, SuperheroMode stance)
+{
+    for (int i = 0; i < m_heroes.GetLength(); ++i)
+    {
+        if(m_heroes[i].GetFirst() == heroID)
+            m_heroes[i].SetSecond(stance);
+    }
 }
