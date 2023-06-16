@@ -180,7 +180,8 @@ bool SuperheroHolder::IsUniqueIDFree(size_t id) const
 }
 void SuperheroHolder::AddHeroIDToMarket(size_t id)
 {
-    if (IsUniqueIDFree(id) || m_market.Contains(id)) // this id doesn't belong to a hero OR this hero is in the market already!
+    if (IsUniqueIDFree(id) ||
+        m_market.Contains(id)) // this id doesn't belong to a hero OR this hero is in the market already!
         return;
 
     m_market.Add(id);
@@ -188,13 +189,13 @@ void SuperheroHolder::AddHeroIDToMarket(size_t id)
 }
 void SuperheroHolder::RemoveHeroIDFromMarket(size_t id)
 {
-    if(!m_market.Contains(id))
+    if (!m_market.Contains(id))
         return;
 
     Array<size_t> idsToKeep;
     for (int i = 0; i < m_market.GetLength(); ++i)
     {
-        if(m_market[i] == id)
+        if (m_market[i] == id)
             continue;
 
         idsToKeep.Add(m_market[i]);
@@ -202,4 +203,14 @@ void SuperheroHolder::RemoveHeroIDFromMarket(size_t id)
 
     m_market = idsToKeep;
     SaveMarket();
+}
+const Superhero &SuperheroHolder::GetSuperhero(const String &nickname)
+{
+    for (int i = 0; i < m_holder.GetLength(); ++i)
+    {
+        if (m_holder[i].GetNickname() == nickname)
+            return m_holder[i];
+    }
+
+    throw std::runtime_error(("No hero found with name: " + nickname + " !").c_str());
 }

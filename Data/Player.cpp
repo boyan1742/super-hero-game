@@ -45,7 +45,26 @@ void Player::ChangeHeroStance(size_t heroID, SuperheroMode stance)
 {
     for (int i = 0; i < m_heroes.GetLength(); ++i)
     {
-        if(m_heroes[i].GetFirst() == heroID)
+        if (m_heroes[i].GetFirst() == heroID)
             m_heroes[i].SetSecond(stance);
     }
+}
+bool Player::HasSuperhero(size_t id)
+{
+    for (int i = 0; i < m_heroes.GetLength(); ++i)
+    {
+        if (m_heroes[i].GetFirst() == id)
+            return true;
+    }
+    return false;
+}
+void Player::DecreaseMoney(double amount)
+{
+    m_money -= amount;
+    if(m_money < 0)
+        m_money = 0;
+}
+void Player::AddMoney(double amount)
+{
+    m_money += amount;
 }

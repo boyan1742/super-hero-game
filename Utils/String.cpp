@@ -405,7 +405,7 @@ void String::SetData(const char *str)
     }
 
     size_t len = strlen(str);
-    if (len > sizeof(m_data.m_heapBuffer))
+    if (len >= sizeof(m_data.m_heapBuffer))
     {
         m_capacity = len + 1 + CAPACITY_PADDING;
         m_data.m_heapBuffer.m_data = new char[len + 1 + CAPACITY_PADDING];
@@ -414,7 +414,7 @@ void String::SetData(const char *str)
     } else
     {
         strcpy_s(m_data.m_stackBuffer, str);
-        m_capacity = strlen(str);
+        m_capacity = len;
     }
 }
 void String::ToLower()

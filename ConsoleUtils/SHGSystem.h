@@ -7,6 +7,7 @@
 #include "../Utils/UniquePtr.hpp"
 #include "../Data/User.h"
 #include "../Data/Superhero.h"
+#include "../Data/Player.h"
 
 class SHGSystem
 {
@@ -35,6 +36,8 @@ class SHGSystem
 
     void AddPlayer();
     void DeletePlayer();
+
+    void SavePlayer(const Player& pl);
 
     void Market();
     void ShowPlayers();

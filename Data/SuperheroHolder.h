@@ -18,6 +18,7 @@ public:
     void AddSuperhero(const Superhero& superhero);
     void AddSuperhero(Superhero&& superhero);
     const Superhero& GetSuperhero(size_t uniqueID);
+    const Superhero& GetSuperhero(const String& nickname);
     bool HasHeroes() const;
 
     bool IsUniqueIDFree(size_t id) const;

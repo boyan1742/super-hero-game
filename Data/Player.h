@@ -22,6 +22,11 @@ public:
     const Array<Pair<size_t, SuperheroMode>>& GetSuperheroes() const;
 
     void ChangeHeroStance(size_t heroID, SuperheroMode stance);
+
+    bool HasSuperhero(size_t id);
+
+    void DecreaseMoney(double amount);
+    void AddMoney(double amount);
 };
 
 

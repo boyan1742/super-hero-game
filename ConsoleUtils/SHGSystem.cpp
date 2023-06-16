@@ -861,6 +861,8 @@ void SHGSystem::Market()
             size_t id = hero.GetData().GetUniqueID();
             SuperheroHolder::GetInstance().AddSuperhero(std::move(hero.LendData()));
             SuperheroHolder::GetInstance().AddHeroIDToMarket(id);
+
+            SuperheroHolder::GetInstance().SaveSuperheroes();
         }
     }
 
@@ -977,8 +979,8 @@ void SHGSystem::BuyHero()
     }
 
     num--;
-    Player* pl = dynamic_cast<Player*>(m_loggedUser);
-    if(!pl)
+    Player *pl = dynamic_cast<Player *>(m_loggedUser);
+    if (!pl)
     {
         Logger::LogError("Not a player?!?!?!?");
         return;
@@ -1032,6 +1034,166 @@ void SHGSystem::ChangeStance()
 }
 /*WIP*/ void SHGSystem::AttackPlayer()
 {
+    std::cout << "Enter player's username that you want to attack: ";
+    String username;
+    String::GetLine(std::cin, &username);
+
+    String hashedUsername = Utils::HashString(username);
+
+    if (!HasUserInUsersFile(hashedUsername))
+    {
+        Logger::LogError("This player doesn't exist!");
+        return;
+    }
+
+    std::ifstream file(("./users/" + hashedUsername + ".dat").c_str(), std::ios::binary);
+
+    if (!file.is_open())
+    {
+        Logger::LogError("Cannot create player file for user \"" + username + "\"!");
+        return;
+    }
+
+    Optional<UniquePtr<User>> user = ParseUser(file);
+    file.close();
+
+    if (!user.HasValue())
+    {
+        Logger::LogError("Invalid user file!");
+        return;
+    }
+
+    if (user.GetData()->GetUserType() != UserType::Player)
+    {
+        Logger::LogError("Only players can be attacked!");
+        return;
+    }
+
+    std::cout << "Enter your hero that you want to attack with: ";
+
+    String yourHeroNickname;
+    String::GetLine(std::cin, &yourHeroNickname);
+
+    Player *loggedUser = dynamic_cast<Player *>(m_loggedUser);
+    if (!loggedUser)
+        return;
+
+    size_t yourHeroID = 0;
+
+    try
+    {
+        yourHeroID = SuperheroHolder::GetInstance().GetSuperhero(yourHeroNickname).GetUniqueID();
+    }
+    catch (std::exception &ex)
+    {
+        Logger::LogError(ex.what());
+        return;
+    }
+
+    if (!loggedUser->HasSuperhero(yourHeroID))
+    {
+        Logger::LogError("You do not have this hero!");
+        return;
+    }
+
+    Player *pl = dynamic_cast<Player *>(user.LendData().Release());
+
+    if (!pl)
+    {
+        Logger::LogError("Cannot cast user to player!");
+        return;
+    }
+
+    if(pl->GetSuperheroes().GetLength() == 0)
+    {
+        pl->DecreaseMoney(SuperheroHolder::GetInstance().GetSuperhero(yourHeroID).GetPower());
+        loggedUser->AddMoney(15);
+
+        SavePlayer(*pl);
+        SavePlayer(*loggedUser);
+
+        delete pl;
+        return;
+    }
+
+    std::cout << "Enter the hero's name that you want to attack: ";
+    String nickname;
+    String::GetLine(std::cin, &nickname);
+
+    size_t heroID = 0;
+
+    try
+    {
+        heroID = SuperheroHolder::GetInstance().GetSuperhero(nickname).GetUniqueID();
+    }
+    catch (std::exception &ex)
+    {
+        Logger::LogError(ex.what());
+        return;
+    }
+
+    if (!pl->HasSuperhero(heroID))
+    {
+        Logger::LogError("This hero is not bought by " + username + "!");
+        return;
+    }
+
+
+    if (SuperheroHolder::GetInstance().GetSuperhero(yourHeroID).GetElement() ==
+        SuperheroHolder::GetInstance().GetSuperhero(heroID).GetElement())
+    {
+        unsigned power1 = SuperheroHolder::GetInstance().GetSuperhero(yourHeroID).GetPower();
+        unsigned power2 = SuperheroHolder::GetInstance().GetSuperhero(heroID).GetPower();
+
+        const Array<Pair<size_t, SuperheroMode>>& enemyHeroes = pl->GetSuperheroes();
+
+        for (int i = 0; i < enemyHeroes.GetLength(); ++i)
+        {
+            if(enemyHeroes[i].GetFirst() == heroID)
+            {
+                if(enemyHeroes[i].GetSecond() == SuperheroMode::Attack)
+                {
+                    if(power1 > power2)
+                    {
+                        pl->DecreaseMoney(power1);
+                        loggedUser->AddMoney(power1);
+
+                        pl->DeleteHero(heroID);
+                    }
+                    else
+                    {
+                        pl->AddMoney(power2);
+                        loggedUser->DecreaseMoney(power2);
+
+                        loggedUser->DeleteHero(yourHeroID);
+                    }
+                }
+                else
+                {
+                    if(power1 > power2)
+                    {
+                        loggedUser->AddMoney(power1);
+                        pl->DeleteHero(heroID);
+                    }
+                    else
+                    {
+                        pl->AddMoney(power2);
+                        loggedUser->DeleteHero(heroID);
+                    }
+                }
+
+                SavePlayer(*pl);
+                SavePlayer(*loggedUser);
+
+                delete pl;
+                return;
+            }
+        }
+
+    } else
+    {
+
+    }
 
 }
 /*WIP*/ void SHGSystem::UpgradeHero()
@@ -1133,4 +1295,52 @@ bool SHGSystem::HasUserInUsersFile(const String &hashedUsername) const
     file.close();
 
     return false;
+}
+void SHGSystem::SavePlayer(const Player &pl)
+{
+    std::ofstream file(("./users/" + Utils::HashString(pl.GetUsername()) + ".dat").c_str(), std::ios::binary);
+    if(!file.is_open())
+        return;
+
+    size_t usernameLen = pl.GetUsername().GetSize() + 1;
+    size_t passLen = pl.GetPassword().GetSize() + 1;
+    size_t fnLen = pl.GetFirstName().GetSize() + 1;
+    size_t lnLen = pl.GetLastName().GetSize() + 1;
+    size_t emLen = pl.GetEmail().GetSize() + 1;
+
+    UserType type = UserType::Player;
+
+    file.write((const char *) &type, sizeof(UserType));
+
+    file.write((const char *) &passLen, sizeof(size_t));
+    file.write(pl.GetPassword().c_str(), passLen);
+
+    file.write((const char *) &usernameLen, sizeof(size_t));
+    file.write(pl.GetUsername().c_str(), usernameLen);
+
+    file.write((const char *) &fnLen, sizeof(size_t));
+    file.write(pl.GetFirstName().c_str(), fnLen);
+
+    file.write((const char *) &lnLen, sizeof(size_t));
+    file.write(pl.GetLastName().c_str(), lnLen);
+
+    file.write((const char *) &emLen, sizeof(size_t));
+    file.write(pl.GetEmail().c_str(), emLen);
+
+    double money = pl.GetMoney();
+    file.write((const char *) &money, sizeof(double));
+
+    size_t heroesCount = pl.GetSuperheroes().GetLength();
+    file.write((const char *) &heroesCount, sizeof(size_t));
+
+    for (int i = 0; i < heroesCount; ++i)
+    {
+        size_t id = pl.GetSuperheroes()[i].GetFirst();
+        SuperheroMode mode = pl.GetSuperheroes()[i].GetSecond();
+
+        file.write((const char*)&id, sizeof(size_t));
+        file.write((const char*)&mode, sizeof(SuperheroMode));
+    }
+
+    file.close();
 }
