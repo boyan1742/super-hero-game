@@ -10,13 +10,15 @@ static void InitializeStems()
     if(m_initializedStems)
         return;
 
-    const int length = 13;
+    const int length = 15;
     Pair<SHGSystemCommandType, String> stems[length] = {
             Pair<SHGSystemCommandType, String>(SHGSystemCommandType::Help, "help"),
             Pair<SHGSystemCommandType, String>(SHGSystemCommandType::Login, "login"),
             Pair<SHGSystemCommandType, String>(SHGSystemCommandType::Logout, "logout"),
             Pair<SHGSystemCommandType, String>(SHGSystemCommandType::AddPlayer, "addplayer"),
             Pair<SHGSystemCommandType, String>(SHGSystemCommandType::DeletePlayer, "deleteplayer"),
+            Pair<SHGSystemCommandType, String>(SHGSystemCommandType::AddAdmin, "addadmin"),
+            Pair<SHGSystemCommandType, String>(SHGSystemCommandType::TerminateProfile, "terminate"),
             Pair<SHGSystemCommandType, String>(SHGSystemCommandType::Market, "market"),
             Pair<SHGSystemCommandType, String>(SHGSystemCommandType::Players, "players"),
             Pair<SHGSystemCommandType, String>(SHGSystemCommandType::Buy, "buy"),

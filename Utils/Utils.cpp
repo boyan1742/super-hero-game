@@ -2,7 +2,7 @@
 
 String Utils::HashString(const String &normal)
 {
-    String copy;
+    String copy("");
     size_t hash = 0;
     for (size_t i = 0; i < normal.GetSize(); ++i)
     {
@@ -14,94 +14,75 @@ String Utils::HashString(const String &normal)
     return copy;
 }
 
-bool Utils::ValidateUsername(const String &username)
+bool Utils::ValidateUsername(const String &username) // only latin letters and size must be 16.
 {
-    bool flagA = false;
-    bool flagN = false;
+    if (username.GetSize() > 16)
+        return false;
 
-    for (char i = 'a'; i < 'z'; ++i)
+    for (int i = 0; username.GetSize(); i++)
     {
-        flagA = username.Contains(i);
-        if (flagA) break;
-
-        flagA = username.Contains(i ^ 0x20);
-        if (flagA) break;
+        if (!(username[i] >= 'a' && username[i] <= 'z'))
+            return false;
     }
 
-    for (char i = '0'; i < '9'; ++i)
-    {
-        flagN = username.Contains(i);
-        if (flagN) break;
-    }
-
-    return flagA || flagN || username.Contains('-') || username.Contains('_');
+    return true;
 }
 
 bool Utils::ValidatePassword(const String &password)
 {
-    bool flagA = false;
-    bool flagN = false;
+    bool hasSmallLetters = false;
+    bool hasCapitalLetters = false;
+    bool hasNumber = false;
 
-    for (char i = 'a'; i < 'z'; ++i)
+    for (int i = 0; i < password.GetSize(); ++i)
     {
-        flagA = password.Contains(i);
-        if (flagA) break;
+        if (hasCapitalLetters && hasSmallLetters && hasNumber)
+            break;
 
-        flagA = password.Contains(i ^ 0x20);
-        if (flagA) break;
+        if (password[i] >= 'a' && password[i] <= 'z')
+            hasSmallLetters = true;
+
+        if (password[i] >= 'A' && password[i] <= 'Z')
+            hasCapitalLetters = true;
+
+        if (password[i] >= '0' && password[i] <= '9')
+            hasNumber = true;
     }
 
-    for (char i = '0'; i < '9'; ++i)
-    {
-        flagN = password.Contains(i);
-        if (flagN) break;
-    }
-
-    return password.GetSize() >= 6 && flagA && flagN ||
-           (password.Contains('!') || password.Contains('@') ||
-            password.Contains('#') || password.Contains('$') ||
-            password.Contains(' ') || password.Contains('-'));
+    return hasSmallLetters && hasCapitalLetters && hasNumber;
 }
 
 bool Utils::ValidateEmail(const String &email)
 {
-    bool flagA = false;
-    bool flagN = false;
+    bool hasSmallLetters = false;
+    bool hasCapitalLetters = false;
 
-    for (char i = 'a'; i < 'z'; ++i)
+    for (int i = 0; i < email.GetSize(); ++i)
     {
-        flagA = email.Contains(i);
-        if (flagA) break;
+        if (hasCapitalLetters && hasSmallLetters)
+            break;
 
-        flagA = email.Contains(i ^ 0x20);
-        if (flagA) break;
+        if (email[i] >= 'a' && email[i] <= 'z')
+            hasSmallLetters = true;
+
+        if (email[i] >= 'A' && email[i] <= 'Z')
+            hasCapitalLetters = true;
     }
 
-    for (char i = '0'; i < '9'; ++i)
-    {
-        flagN = email.Contains(i);
-        if (flagN) break;
-    }
-
-    return (flagA && email.Contains('@') && email.Contains('.')) ||
-           (flagA && email.Contains('@') && email.Contains('.') && email.Contains('-')) ||
-           (flagA && email.Contains('@') && email.Contains('.') && email.Contains('-') && flagN);
+    return (hasSmallLetters || hasCapitalLetters) && email.Contains('@') &&
+           (email.EndsWith(".com") || email.EndsWith(".net") ||
+            email.EndsWith(".bg") || email.EndsWith(".org"));
 }
 
 bool Utils::ValidateName(const String &name)
 {
-    bool flagA;
-
-    for (char i = 'a'; i < 'z'; ++i)
+    for (int i = 0; name.GetSize(); i++)
     {
-        flagA = name.Contains(i);
-        if (flagA) return true;
-
-        flagA = name.Contains(i ^ 0x20);
-        if (flagA) return true;
+        if (!((name[i] >= 'a' && name[i] <= 'z') || (name[i] >= 'A' && name[i] <= 'Z')))
+            return false;
     }
 
-    return false;
+    return true;
 }
 
 bool Utils::ParseSuperHeroMode(const String &str, SuperheroMode *mode)

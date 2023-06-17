@@ -10,6 +10,8 @@ enum class SHGSystemCommandType
     Logout,
     AddPlayer,
     DeletePlayer,
+    AddAdmin,
+    TerminateProfile,
     Market,
     Players,
     Buy,

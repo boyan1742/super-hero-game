@@ -90,6 +90,7 @@ public:
 
     void ToLower();
     void ToUpper();
+    bool EndsWith(const String& string) const;
 };
 
 std::ostream &operator<<(std::ostream &os, const String &str);

@@ -68,3 +68,14 @@ void Player::AddMoney(double amount)
 {
     m_money += amount;
 }
+void Player::DeleteHero(size_t id)
+{
+    Array<Pair<size_t, SuperheroMode>> temp;
+    for (int i = 0; i < m_heroes.GetLength(); ++i)
+    {
+        if(m_heroes[i].GetFirst() != id)
+            temp.Add(std::move(m_heroes[i]));
+    }
+
+    m_heroes = std::move(temp);
+}

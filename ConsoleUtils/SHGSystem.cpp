@@ -9,12 +9,14 @@
 #include "../Utils/Logger.h"
 
 #include <iostream>
+#include <fcntl.h>
+#include <io.h>
 
 SHGSystem SHGSystem::m_instance;
 
 void SHGSystem::PrintWelcomeMessage() const
 {
-    static const int welcomeMsgBoxWidth = 22;
+    static const int welcomeMsgBoxWidth = 42;
 
     std::cout << (char) 201;
     for (int i = 0; i < welcomeMsgBoxWidth; ++i)
@@ -27,7 +29,9 @@ void SHGSystem::PrintWelcomeMessage() const
     std::cout << (char) 186 << "\n";
 
     std::cout << (char) 186;
-    std::cout << " Welcome to our game! ";
+    _setmode(_fileno(stdout), _O_U16TEXT);
+    std::wcout << L" \u2666 Welcome to S U P E R  HERO  G A M E! \u2666 ";
+    _setmode(_fileno(stdout), _O_TEXT);
     std::cout << (char) 186 << "\n";
 
     std::cout << (char) 186;
@@ -106,9 +110,21 @@ void SHGSystem::Run()
                 break;
             case SHGSystemCommandType::DeletePlayer:
                 if (m_loggedUser && m_loggedUser->GetUserType() == UserType::Admin)
-                    DeletePlayer();
+                    DeletePlayer(String(""));
                 else
                     Logger::LogMessage("You must be logged in as an admin to execute this command!");
+                break;
+            case SHGSystemCommandType::AddAdmin:
+                if (m_loggedUser && m_loggedUser->GetUserType() == UserType::Admin)
+                    CreateAdmin();
+                else
+                    Logger::LogError("Only admins can add other admins.");
+                break;
+            case SHGSystemCommandType::TerminateProfile:
+                if (m_loggedUser && m_loggedUser->GetUserType() == UserType::Player)
+                    DeletePlayer(m_loggedUser->GetUsername());
+                else
+                    Logger::LogError("Only players can delete their profiles.");
                 break;
             case SHGSystemCommandType::Market:
                 Market();
@@ -242,6 +258,18 @@ void SHGSystem::Login()
     if (m_loggedUser->GetUserType() == UserType::Admin && !SuperheroHolder::GetInstance().HasHeroes())
         AddFirstTimeHeroes();
 
+    if (m_loggedUser->GetUserType() == UserType::Player)
+    {
+        if (!m_loggedPlayers.Contains(m_loggedUser->GetUsername()))
+        {
+            m_loggedPlayers.Add(m_loggedUser->GetUsername());
+            dynamic_cast<Player *>(m_loggedUser)->AddMoney(150);
+        }
+
+        if (m_loggedPlayers.GetLength() == m_playerCount)
+            m_loggedPlayers = Array<String>();
+    }
+
     file.close();
 }
 void SHGSystem::Logout(bool bypass)
@@ -276,6 +304,7 @@ void SHGSystem::Setup()
 
     CheckIfAdminAccountExists();
     SuperheroHolder::GetInstance().LoadSuperheroes();
+    m_playerCount = GetPlayersCount();
 }
 void SHGSystem::CheckIfAdminAccountExists() const
 {
@@ -314,8 +343,7 @@ void SHGSystem::CheckIfAdminAccountExists() const
         {
             adminExists = true;
             break;
-        } else if (split[0] == "p")
-        {}
+        } else if (split[0] == "p") {}
         else
             throw std::runtime_error((String("Invalid username at line: ") + counter).c_str());
 
@@ -533,7 +561,7 @@ bool SHGSystem::CreatePlayer() const
     file.write((const char *) &emLen, sizeof(size_t));
     file.write(email.c_str(), emLen);
 
-    double money = 0;
+    double money = 2500;
     file.write((const char *) &money, sizeof(double));
 
     size_t heroesCount = 0;
@@ -661,7 +689,7 @@ bool SHGSystem::AddAccountToFile(UserType type, const String &usernameHash) cons
 
     return false;
 }
-Optional<UniquePtr<User>> SHGSystem::ParseUser(std::ifstream &file)
+Optional<UniquePtr<User>> SHGSystem::ParseUser(std::ifstream &file) const
 {
     UserType type;
     file.read((char *) &type, sizeof(UserType));
@@ -738,7 +766,7 @@ Optional<UniquePtr<User>> SHGSystem::ParseUser(std::ifstream &file)
     return Optional<UniquePtr<User>>();
 }
 
-void SHGSystem::AddPlayer()
+void SHGSystem::AddPlayer() const
 {
     while (!CreatePlayer())
     {
@@ -756,11 +784,13 @@ void SHGSystem::AddPlayer()
         }
     }
 }
-void SHGSystem::DeletePlayer()
+void SHGSystem::DeletePlayer(String username) const
 {
-    std::cout << "Enter username that you want to delete: ";
-    String username;
-    String::GetLine(std::cin, &username);
+    if (username == "")
+    {
+        std::cout << "Enter username that you want to delete: ";
+        String::GetLine(std::cin, &username);
+    }
     String hashedUsername = Utils::HashString(username);
 
     std::ifstream file("usernames.dat", std::ios::binary);
@@ -813,7 +843,7 @@ void SHGSystem::DeletePlayer()
 
     f.close();
 }
-void SHGSystem::Market()
+void SHGSystem::Market() const
 {
     Array<size_t> heroes = SuperheroHolder::GetInstance().GetMarketHeroes();
     if (heroes.IsEmpty()) //empty, try to load from disk!
@@ -867,7 +897,7 @@ void SHGSystem::Market()
     }
 
 }
-void SHGSystem::ShowPlayers()
+void SHGSystem::ShowPlayers() const
 {
     if (!m_loggedUser)
         return;
@@ -944,7 +974,23 @@ void SHGSystem::ShowPlayers()
                     continue;
                 else if (users[i]->GetUserType() == UserType::Player)
                     std::cout << "\t" << users[i]->GetUsername() << " : $" <<
-                              ((Player *) users[i])->GetMoney();
+                              ((Player *) users[i])->GetMoney() <<
+                              "\n\t\t[ ";
+
+                Array<Pair<size_t, SuperheroMode>> heroes = ((Player *) users[i])->GetSuperheroes();
+                if (heroes.IsEmpty())
+                {
+                    std::cout << "No Heroes ]";
+                    continue;
+                }
+
+                for (int j = 0; j < heroes.GetLength(); ++j)
+                {
+                    std::cout <<
+                              SuperheroHolder::GetInstance().GetSuperhero(heroes[i].GetFirst()).GetNickname() <<
+                              (j == heroes.GetLength() - 1 ? " " : ", ");
+                }
+                std::cout << "]";
             }
             std::cout << "\n";
             break;
@@ -956,7 +1002,7 @@ void SHGSystem::ShowPlayers()
     for (int i = 0; i < users.GetLength(); ++i)
         delete users[i];
 }
-void SHGSystem::BuyHero()
+void SHGSystem::BuyHero() const
 {
     Array<size_t> heroes = SuperheroHolder::GetInstance().GetMarketHeroes();
     for (int i = 0; i < heroes.GetLength(); ++i)
@@ -985,11 +1031,18 @@ void SHGSystem::BuyHero()
         Logger::LogError("Not a player?!?!?!?");
         return;
     }
+
+    if (pl->HasSuperhero(heroes[num]))
+    {
+        Logger::LogError("You already have this hero!");
+        return;
+    }
+
     pl->AddHero(heroes[num], SuperheroMode::Attack);
     SuperheroHolder::GetInstance().RemoveHeroIDFromMarket(heroes[num]);
 }
 
-void SHGSystem::ChangeStance()
+void SHGSystem::ChangeStance() const
 {
     Player *player = dynamic_cast<Player *>( m_loggedUser);
     if (!player)
@@ -1032,38 +1085,63 @@ void SHGSystem::ChangeStance()
     id--;
     player->ChangeHeroStance(sh[id].GetFirst(), mode);
 }
-/*WIP*/ void SHGSystem::AttackPlayer()
+
+static bool IsDominant(SuperheroElements element1, SuperheroElements element2)
 {
-    std::cout << "Enter player's username that you want to attack: ";
-    String username;
-    String::GetLine(std::cin, &username);
+    switch (element1)
+    {
+        case SuperheroElements::Fire:
+            if (element2 == SuperheroElements::Earth)
+                return true;
+            else
+                return false;
+        case SuperheroElements::Earth:
+            if (element2 == SuperheroElements::Water)
+                return true;
+            else
+                return false;
+        case SuperheroElements::Water:
+            if (element2 == SuperheroElements::Fire)
+                return true;
+            else
+                return false;
+        default :
+            return false;
+    }
+}
 
-    String hashedUsername = Utils::HashString(username);
+/*WIP*/ void SHGSystem::AttackPlayer() const
+{
+    std::cout << "Enter player's enemyUsername that you want to attack: ";
+    String enemyUsername;
+    String::GetLine(std::cin, &enemyUsername);
 
-    if (!HasUserInUsersFile(hashedUsername))
+    String hashedEnemyUsername = Utils::HashString(enemyUsername);
+
+    if (!HasUserInUsersFile(hashedEnemyUsername))
     {
         Logger::LogError("This player doesn't exist!");
         return;
     }
 
-    std::ifstream file(("./users/" + hashedUsername + ".dat").c_str(), std::ios::binary);
+    std::ifstream enemyUserfile(("./users/" + hashedEnemyUsername + ".dat").c_str(), std::ios::binary);
 
-    if (!file.is_open())
+    if (!enemyUserfile.is_open())
     {
-        Logger::LogError("Cannot create player file for user \"" + username + "\"!");
+        Logger::LogError("Cannot create player enemyUserfile for enemyOptional \"" + enemyUsername + "\"!");
         return;
     }
 
-    Optional<UniquePtr<User>> user = ParseUser(file);
-    file.close();
+    Optional<UniquePtr<User>> enemyOptional = ParseUser(enemyUserfile);
+    enemyUserfile.close();
 
-    if (!user.HasValue())
+    if (!enemyOptional.HasValue())
     {
-        Logger::LogError("Invalid user file!");
+        Logger::LogError("Invalid enemyOptional user file!");
         return;
     }
 
-    if (user.GetData()->GetUserType() != UserType::Player)
+    if (enemyOptional.GetData()->GetUserType() != UserType::Player)
     {
         Logger::LogError("Only players can be attacked!");
         return;
@@ -1096,35 +1174,35 @@ void SHGSystem::ChangeStance()
         return;
     }
 
-    Player *pl = dynamic_cast<Player *>(user.LendData().Release());
+    Player *enemy = dynamic_cast<Player *>(enemyOptional.LendData().Release());
 
-    if (!pl)
+    if (!enemy)
     {
-        Logger::LogError("Cannot cast user to player!");
+        Logger::LogError("Cannot cast `enemy` to player!");
         return;
     }
 
-    if(pl->GetSuperheroes().GetLength() == 0)
+    if (enemy->GetSuperheroes().GetLength() == 0) // enemy has no heroes => you win.
     {
-        pl->DecreaseMoney(SuperheroHolder::GetInstance().GetSuperhero(yourHeroID).GetPower());
+        enemy->DecreaseMoney(SuperheroHolder::GetInstance().GetSuperhero(yourHeroID).GetPower());
         loggedUser->AddMoney(15);
 
-        SavePlayer(*pl);
+        SavePlayer(*enemy);
         SavePlayer(*loggedUser);
 
-        delete pl;
+        delete enemy;
         return;
     }
 
     std::cout << "Enter the hero's name that you want to attack: ";
-    String nickname;
-    String::GetLine(std::cin, &nickname);
+    String enemyHeroNickname;
+    String::GetLine(std::cin, &enemyHeroNickname);
 
-    size_t heroID = 0;
+    size_t enemyHeroID = 0;
 
     try
     {
-        heroID = SuperheroHolder::GetInstance().GetSuperhero(nickname).GetUniqueID();
+        enemyHeroID = SuperheroHolder::GetInstance().GetSuperhero(enemyHeroNickname).GetUniqueID();
     }
     catch (std::exception &ex)
     {
@@ -1132,75 +1210,91 @@ void SHGSystem::ChangeStance()
         return;
     }
 
-    if (!pl->HasSuperhero(heroID))
+    if (!enemy->HasSuperhero(enemyHeroID))
     {
-        Logger::LogError("This hero is not bought by " + username + "!");
+        Logger::LogError("This hero is not bought by " + enemyUsername + "!");
         return;
     }
 
+    unsigned yourPower;
+    unsigned enemyPower;
 
     if (SuperheroHolder::GetInstance().GetSuperhero(yourHeroID).GetElement() ==
-        SuperheroHolder::GetInstance().GetSuperhero(heroID).GetElement())
+        SuperheroHolder::GetInstance().GetSuperhero(enemyHeroID).GetElement()) // equal elements.
     {
-        unsigned power1 = SuperheroHolder::GetInstance().GetSuperhero(yourHeroID).GetPower();
-        unsigned power2 = SuperheroHolder::GetInstance().GetSuperhero(heroID).GetPower();
-
-        const Array<Pair<size_t, SuperheroMode>>& enemyHeroes = pl->GetSuperheroes();
-
-        for (int i = 0; i < enemyHeroes.GetLength(); ++i)
+        yourPower = SuperheroHolder::GetInstance().GetSuperhero(yourHeroID).GetPower();
+        enemyPower = SuperheroHolder::GetInstance().GetSuperhero(enemyHeroID).GetPower();
+    } else // not equal elements
+    {
+        if (IsDominant(SuperheroHolder::GetInstance().GetSuperhero(yourHeroID).GetElement(),
+                       SuperheroHolder::GetInstance().GetSuperhero(enemyHeroID).GetElement()))
         {
-            if(enemyHeroes[i].GetFirst() == heroID)
-            {
-                if(enemyHeroes[i].GetSecond() == SuperheroMode::Attack)
-                {
-                    if(power1 > power2)
-                    {
-                        pl->DecreaseMoney(power1);
-                        loggedUser->AddMoney(power1);
-
-                        pl->DeleteHero(heroID);
-                    }
-                    else
-                    {
-                        pl->AddMoney(power2);
-                        loggedUser->DecreaseMoney(power2);
-
-                        loggedUser->DeleteHero(yourHeroID);
-                    }
-                }
-                else
-                {
-                    if(power1 > power2)
-                    {
-                        loggedUser->AddMoney(power1);
-                        pl->DeleteHero(heroID);
-                    }
-                    else
-                    {
-                        pl->AddMoney(power2);
-                        loggedUser->DeleteHero(heroID);
-                    }
-                }
-
-                SavePlayer(*pl);
-                SavePlayer(*loggedUser);
-
-                delete pl;
-                return;
-            }
+            yourPower = SuperheroHolder::GetInstance().GetSuperhero(yourHeroID).GetPower() * 2;
+            enemyPower = SuperheroHolder::GetInstance().GetSuperhero(enemyHeroID).GetPower();
+        } else
+        {
+            yourPower = SuperheroHolder::GetInstance().GetSuperhero(yourHeroID).GetPower();
+            enemyPower = SuperheroHolder::GetInstance().GetSuperhero(enemyHeroID).GetPower() * 2;
         }
-
-    } else
-    {
-
     }
 
+    const Array<Pair<size_t, SuperheroMode>> &enemyHeroes = enemy->GetSuperheroes();
+
+    for (int i = 0; i < enemyHeroes.GetLength(); ++i)
+    {
+        if (enemyHeroes[i].GetFirst() == enemyHeroID)
+        {
+            if (enemyHeroes[i].GetSecond() == SuperheroMode::Attack)
+            {
+                if (yourPower > enemyPower) // you win, bigger power
+                {
+                    enemy->DecreaseMoney(yourPower - enemyPower);
+                    loggedUser->AddMoney(yourPower - enemyPower);
+
+                    enemy->DeleteHero(enemyHeroID);
+                } else if (enemyPower > yourPower) // you lose, smaller power
+                {
+                    enemy->AddMoney(25);
+                    loggedUser->DecreaseMoney(2 * (enemyPower - yourPower));
+
+                    loggedUser->DeleteHero(yourHeroID);
+                } else // equal
+                {
+                    loggedUser->DecreaseMoney(20);
+                }
+            } else // defence
+            {
+                if (yourPower > enemyPower) // you win, bigger power
+                {
+                    loggedUser->AddMoney(yourPower - enemyPower);
+
+                    enemy->DeleteHero(enemyHeroID);
+                } else if (enemyPower > yourPower) // you lose, smaller power
+                {
+                    enemy->AddMoney(25);
+                    loggedUser->DecreaseMoney(2 * (enemyPower - yourPower));
+
+                    loggedUser->DeleteHero(yourHeroID);
+                } else // equal
+                {
+                    loggedUser->DecreaseMoney(20);
+                }
+            }
+
+            SavePlayer(*enemy);
+            SavePlayer(*loggedUser);
+
+            delete enemy;
+            return;
+        }
+    }
 }
-/*WIP*/ void SHGSystem::UpgradeHero()
+
+/*WIP*/ void SHGSystem::UpgradeHero() const
 {
     Logger::LogMessage("[Work in progress] Not implemented yet!");
 }
-void SHGSystem::Baltop()
+void SHGSystem::Baltop() const
 {
     Array<User *> users;
 
@@ -1296,10 +1390,47 @@ bool SHGSystem::HasUserInUsersFile(const String &hashedUsername) const
 
     return false;
 }
-void SHGSystem::SavePlayer(const Player &pl)
+
+size_t SHGSystem::GetPlayersCount() const
+{
+    std::ifstream file("usernames.dat", std::ios::binary);
+
+    if (!file.is_open())
+    {
+        Logger::LogError("Users file not found!");
+        return false;
+    }
+
+    size_t count = 0;
+
+    while (!file.eof())
+    {
+        String line;
+        size_t len;
+        file.read((char *) &len, sizeof(size_t));
+        String::ReadExact(file, len, &line);
+        if (file.eof())
+            break;
+
+        Array<String> split = line.Split('|');
+        if (split.IsEmpty())
+            continue;
+
+        if (split[0] == "P")
+        {
+            count++;
+        }
+    }
+
+    file.close();
+
+    return count;
+}
+
+void SHGSystem::SavePlayer(const Player &pl) const
 {
     std::ofstream file(("./users/" + Utils::HashString(pl.GetUsername()) + ".dat").c_str(), std::ios::binary);
-    if(!file.is_open())
+    if (!file.is_open())
         return;
 
     size_t usernameLen = pl.GetUsername().GetSize() + 1;
@@ -1338,8 +1469,8 @@ void SHGSystem::SavePlayer(const Player &pl)
         size_t id = pl.GetSuperheroes()[i].GetFirst();
         SuperheroMode mode = pl.GetSuperheroes()[i].GetSecond();
 
-        file.write((const char*)&id, sizeof(size_t));
-        file.write((const char*)&mode, sizeof(SuperheroMode));
+        file.write((const char *) &id, sizeof(size_t));
+        file.write((const char *) &mode, sizeof(SuperheroMode));
     }
 
     file.close();

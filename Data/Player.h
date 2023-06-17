@@ -27,6 +27,7 @@ public:
 
     void DecreaseMoney(double amount);
     void AddMoney(double amount);
+    void DeleteHero(size_t id);
 };
 
 

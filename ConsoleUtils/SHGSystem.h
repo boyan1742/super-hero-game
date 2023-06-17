@@ -16,8 +16,12 @@ class SHGSystem
     SHGSystem() = default;
 
     User *m_loggedUser = nullptr;
+    size_t m_playerCount = 0;
+    Array<String> m_loggedPlayers;
 
     void PrintWelcomeMessage() const;
+
+    size_t GetPlayersCount() const;
 
     void Setup();
     void CheckIfAdminAccountExists() const;
@@ -34,26 +38,26 @@ class SHGSystem
 
     Optional<Superhero> CreateHero() const;
 
-    void AddPlayer();
-    void DeletePlayer();
+    void AddPlayer() const;
+    void DeletePlayer(String username) const;
 
-    void SavePlayer(const Player& pl);
+    void SavePlayer(const Player& pl) const;
 
-    void Market();
-    void ShowPlayers();
-    void BuyHero();
+    void Market() const;
+    void ShowPlayers() const;
+    void BuyHero() const;
 
-    void ChangeStance();
-    void AttackPlayer();
+    void ChangeStance() const;
+    void AttackPlayer() const;
 
-    void UpgradeHero();
-    void Baltop();
+    void UpgradeHero() const;
+    void Baltop() const;
 
     bool AddAccountToFile(UserType type, const String &usernameHash) const;
 
     bool HasUserInUsersFile(const String& hashedUsername) const;
 
-    Optional<UniquePtr<User>> ParseUser(std::ifstream &file);
+    Optional<UniquePtr<User>> ParseUser(std::ifstream &file) const;
 public:
     SHGSystem(const SHGSystem&) = delete;
     SHGSystem& operator=(const SHGSystem&) = delete;

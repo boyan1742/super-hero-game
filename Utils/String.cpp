@@ -395,7 +395,7 @@ void String::GetLine(std::istream &istream, String *pString)
 
 void String::SetData(const char *str)
 {
-    if(!str)
+    if (!str)
         return;
 
     if (!IsSSO())
@@ -580,6 +580,23 @@ String &String::operator+=(double rhs)
 {
     Append(rhs);
     return *this;
+}
+bool String::EndsWith(const String& string) const
+{
+    if(*this == string)
+        return true;
+
+    size_t counter = string.GetSize();
+    for (size_t i = GetSize(); i >= 0; i--)
+    {
+        if(counter > string.GetSize())
+            return true;
+
+        if((*this)[i] != string[counter--])
+            return false;
+    }
+
+    return true;
 }
 
 
